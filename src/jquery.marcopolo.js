@@ -139,7 +139,7 @@
 
       // Create an empty list for displaying future results. Insert it directly
       // after the input element.
-      self.$list = $('<ol class="mp_list" />')
+      self.$list = $('<ul class="mp_list typeahead dropdown-menu" />')
                      .hide()
                      .insertAfter(self.$input);
 
@@ -588,7 +588,7 @@
 
     // Remove the highlight class from the specified item.
     _removeHighlight: function ($item) {
-      $item.removeClass('mp_highlighted');
+      $item.removeClass('mp_highlighted active');
 
       return this;
     },
@@ -599,7 +599,7 @@
       // highlighted at a time.
       this._removeHighlight(this._highlighted());
 
-      $item.addClass('mp_highlighted');
+      $item.addClass('mp_highlighted active');
 
       return this;
     },
@@ -646,6 +646,16 @@
     _showList: function () {
       var $list = this.$list;
 
+      // Calculate position of the list
+      var pos = $.extend({}, this.$input.offset(), {
+        height: this.$input[0].offsetHeight
+      });
+
+      $list.css({
+        top: pos.top + pos.height,
+        left: pos.left
+      });
+
       // But only if there are results to be shown.
       if ($list.children().length) {
         $list.show();
@@ -680,7 +690,7 @@
           formatNoResults;
 
       // Fire 'formatNoResults' callback.
-      formatNoResults = options.formatNoResults && options.formatNoResults.call($input, q, $item);
+      formatNoResults = options.formatNoResults && self._wrap(options.formatNoResults.call($input, q, $item));
 
       if (formatNoResults) {
         $item.html(formatNoResults);
@@ -725,7 +735,7 @@
       for (var i = 0, length = data.length; i < length; i++) {
         datum = data[i];
         $item = $('<li class="mp_item" />');
-        formatItem = options.formatItem.call($input, datum, $item);
+        formatItem = self._wrap(options.formatItem.call($input, datum, $item));
 
         // Store the original data for easy access later.
         $item.data('marcoPolo', datum);
@@ -813,7 +823,7 @@
       $list.empty();
 
       // Fire 'formatError' callback.
-      formatError = options.formatError && options.formatError.call($input, $item, jqXHR, textStatus, errorThrown);
+      formatError = options.formatError && self._wrap(options.formatError.call($input, $item, jqXHR, textStatus, errorThrown));
 
       if (formatError) {
         $item.html(formatError);
@@ -856,7 +866,7 @@
       $list.empty();
 
       // Fire 'formatMinChars' callback.
-      formatMinChars = options.formatMinChars && options.formatMinChars.call($input, options.minChars, $item);
+      formatMinChars = options.formatMinChars && self._wrap(options.formatMinChars.call($input, options.minChars, $item));
 
       if (formatMinChars) {
         $item.html(formatMinChars);
@@ -1041,6 +1051,11 @@
       self.element.trigger(triggerName, triggerArgs);
 
       return callback && callback.apply(self.element, triggerArgs);
+    },
+
+    // Wrap any item. (Bootstrap expect item wrapped in <a>)
+    _wrap: function(item) {
+        return '<a href="#">' + item + '</a>';
     }
   });
 }));
